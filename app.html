@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Mundial 2026 (datos en vivo)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #0b1220; color: #e8e8e8; margin: 0; padding: 16px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: #9aa3b2; margin-bottom: 16px; }
+  .topbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .topbar button {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid #2a4a3a;
+    background: #16261d; color: #8be0a8; cursor: pointer; font-size: 13px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  th { color: #9aa3b2; padding: 4px 2px; text-align: center; }
+  th:first-child { text-align: left; }
+  td { padding: 4px 2px; border-top: 1px solid #2a3344; text-align: center; }
+  td:first-child { text-align: left; }
+  tr.qualified { background: #102a1c; }
+  .group-block { margin-bottom: 20px; }
+  .group-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .note { font-size: 11px; color: #6b7385; margin-top: 16px; line-height: 1.5; }
+  .error { background: #2a1616; border: 1px solid #5a2a2a; color: #f0b3b3; padding: 12px; border-radius: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>Simulador Mundial 2026</h1>
+<div class="sub" id="lastUpdated">Cargando datos en vivo...</div>
+
+<div class="topbar">
+  <button id="btnRefresh">⟳ Forzar actualización ahora</button>
+</div>
+
+<div id="viewGroups"></div>
+
+<div class="note">
+  Esta versión carga los datos automáticamente desde
+  <code id="dataUrlLabel">DATA_JSON_URL</code>,
+  un archivo que un bot en GitHub Actions actualiza solo cada 30 minutos.
+  No necesitas pegar nada manualmente: solo abre esta página y siempre verá
+  los datos más recientes que el bot haya publicado.
+</div>
+
+<script>
+// ============================================================
+// CONFIGURA ESTA URL: debe apuntar al data.json de tu repositorio.
+// Ejemplo si tu usuario de GitHub es "tuusuario" y el repo se llama
+// "mundial-2026-bot":
+//
+//   https://raw.githubusercontent.com/tuusuario/mundial-2026-bot/main/data.json
+//
+// (raw.githubusercontent.com sirve el archivo tal cual, sin caché agresivo)
+// ============================================================
+const DATA_JSON_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/data.json";
+
+document.getElementById('dataUrlLabel').textContent = DATA_JSON_URL;
+
+function calcRow(t){
+  const pts = t.pg*3 + t.pe;
+  const dg = t.gf - t.gc;
+  return Object.assign({}, t, {pts, dg});
+}
+function sortGroup(arr){
+  return arr.map(calcRow).sort((a,b)=> b.pts-a.pts || b.dg-a.dg || b.gf-a.gf);
+}
+
+const FLAGS = {
+  "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "R. Checa": "cz",
+  "Canadá": "ca", "Suiza": "ch", "Bosnia y Herz.": "ba", "Qatar": "qa",
+  "Brasil": "br", "Marruecos": "ma", "Escocia": "gb-sct", "Haití": "ht",
+  "Estados Unidos": "us", "Australia": "au", "Paraguay": "py", "Türkiye": "tr",
+  "Alemania": "de", "Costa de Marfil": "ci", "Ecuador": "ec", "Curazao": "cw",
+  "Países Bajos": "nl", "Japón": "jp", "Suecia": "se", "Túnez": "tn",
+  "Egipto": "eg", "Irán": "ir", "Bélgica": "be", "Nva. Zelanda": "nz",
+  "España": "es", "Uruguay": "uy", "Cabo Verde": "cv", "Arabia Saudí": "sa",
+  "Noruega": "no", "Francia": "fr", "Senegal": "sn", "Irak": "iq",
+  "Argentina": "ar", "Austria": "at", "Jordania": "jo", "Argelia": "dz",
+  "Colombia": "co", "R.D. Congo": "cd", "Portugal": "pt", "Uzbekistán": "uz",
+  "Inglaterra": "gb-eng", "Ghana": "gh", "Panamá": "pa", "Croacia": "hr"
+};
+function flagFor(name){
+  if(!name) return '';
+  const base = name.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  const code = FLAGS[base];
+  if(!code) return '';
+  return `<img src="https://flagcdn.com/h20/${code}.svg" width="20" height="14" alt="" style="vertical-align:middle;border-radius:2px;margin-right:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.1)">`;
+}
+
+function renderGroups(groups){
+  const el = document.getElementById('viewGroups');
+  let html = '';
+  Object.keys(groups).sort().forEach(g=>{
+    const teams = groups[g].map(r=>({name:r[0], pj:r[1], pg:r[2], pe:r[3], pp:r[4], gf:r[5], gc:r[6]}));
+    const sorted = sortGroup(teams);
+    html += `<div class="group-block">
+      <div class="group-title">Grupo ${g}</div>
+      <table>
+      <tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>Pts</th><th>DG</th></tr>`;
+    sorted.forEach((t,idx)=>{
+      html += `<tr class="${idx<2?'qualified':''}">
+        <td>${flagFor(t.name)}${t.name}</td><td>${t.pj}</td><td>${t.pg}</td><td>${t.pe}</td><td>${t.pp}</td>
+        <td>${t.gf}</td><td>${t.gc}</td><td>${t.pts}</td><td>${t.dg>0?'+':''}${t.dg}</td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+  });
+  el.innerHTML = html;
+}
+
+async function loadData(){
+  document.getElementById('lastUpdated').textContent = "Cargando datos en vivo...";
+  try {
+    const res = await fetch(DATA_JSON_URL + "?t=" + Date.now(), {cache: "no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const payload = await res.json();
+    renderGroups(payload.groups);
+    const updated = new Date(payload.updated_at);
+    document.getElementById('lastUpdated').textContent =
+      "Última actualización del bot: " + updated.toLocaleString('es-MX');
+  } catch(e){
+    document.getElementById('viewGroups').innerHTML =
+      `<div class="error">No se pudo cargar data.json (${e.message}).
+       Revisa que DATA_JSON_URL esté bien configurada y que el repositorio
+       sea público.</div>`;
+    document.getElementById('lastUpdated').textContent = "Error al cargar datos.";
+  }
+}
+
+document.getElementById('btnRefresh').onclick = loadData;
+loadData();
+setInterval(loadData, 5 * 60 * 1000); // refresca solo cada 5 minutos mientras esté abierta
+</script>
+</body>
+</html>
