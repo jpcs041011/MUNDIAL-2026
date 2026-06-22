@@ -26,6 +26,9 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      - name: Instalar navegador headless (Chromium para Playwright)
+        run: python -m playwright install --with-deps chromium
+
       - name: Ejecutar scraper
         run: python scraper.py
 
