@@ -3,6 +3,11 @@ Scraper del Mundial 2026
 Lee la tabla de posiciones pública y genera data.json
 con el mismo formato que usa la app HTML.
 
+Este sitio carga sus datos con JavaScript (es una app Next.js), por lo
+que no basta con una petición HTTP simple: usamos Playwright para
+abrir un navegador headless, dejar que la página cargue, y luego
+extraer el HTML ya renderizado.
+
 Uso: python scraper.py
 Genera/actualiza: data.json
 """
@@ -12,14 +17,13 @@ import re
 import sys
 from datetime import datetime, timezone
 
-import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 SOURCE_URL = "https://bracketmundial2026.com/posiciones"
 OUTPUT_FILE = "data.json"
 
 # Mapeo de nombres de equipo en el sitio -> nombre que usa la app
-# (ajusta aquí si el sitio cambia algún nombre)
 NAME_MAP = {
     "Bosnia y Herzegovina": "Bosnia y Herz.",
     "República Checa": "R. Checa",
@@ -30,6 +34,7 @@ NAME_MAP = {
     "DR Congo": "R.D. Congo",
     "Nueva Zelanda": "Nva. Zelanda",
     "Turquía": "Türkiye",
+    "Iraq": "Irak",
 }
 
 
@@ -38,13 +43,16 @@ def normalize_name(name: str) -> str:
     return NAME_MAP.get(name, name)
 
 
-def fetch_html(url: str) -> str:
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; Mundial2026Bot/1.0; +https://github.com/)"
-    }
-    resp = requests.get(url, headers=headers, timeout=20)
-    resp.raise_for_status()
-    return resp.text
+def fetch_rendered_html(url: str) -> str:
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent="Mozilla/5.0 (compatible; Mundial2026Bot/1.0)")
+        page.goto(url, wait_until="networkidle", timeout=30000)
+        # Espera extra por si algún dato tarda en pintarse tras el JS inicial
+        page.wait_for_timeout(1500)
+        html = page.content()
+        browser.close()
+        return html
 
 
 def parse_groups(html: str) -> dict:
@@ -56,7 +64,16 @@ def parse_groups(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     result = {}
 
-    headings = soup.find_all(["h2", "h3"], string=re.compile(r"Posiciones Grupo [A-L]"))
+    headings = soup.find_all(
+        ["h1", "h2", "h3", "h4"], string=re.compile(r"Posiciones Grupo [A-L]")
+    )
+    if not headings:
+        # Fallback: el texto puede estar repartido en hijos (ej. dentro de un <a>)
+        headings = [
+            tag
+            for tag in soup.find_all(["h1", "h2", "h3", "h4"])
+            if re.search(r"Posiciones Grupo [A-L]", tag.get_text())
+        ]
 
     for heading in headings:
         match = re.search(r"Grupo ([A-L])", heading.get_text())
@@ -75,7 +92,6 @@ def parse_groups(html: str) -> dict:
             if len(cells) < 8:
                 continue
             raw_name = cells[0].get_text(strip=True)
-            # quitar etiquetas tipo "ANF" (anfitrión) y numeros de posicion pegados
             clean_name = re.sub(r"^[0-9]+", "", raw_name)
             clean_name = clean_name.replace("ANF", "").strip()
             clean_name = normalize_name(clean_name)
@@ -98,35 +114,25 @@ def parse_groups(html: str) -> dict:
     return result
 
 
-def parse_scorers(html: str) -> list:
-    """
-    Best-effort: el sitio fuente no siempre publica goleadores en esta página.
-    Si no se encuentra nada, se devuelve lista vacía y la app conserva
-    la última tabla de goleadores guardada.
-    """
-    return []
-
-
 def main():
-    print(f"[{datetime.now(timezone.utc).isoformat()}] Descargando {SOURCE_URL} ...")
-    html = fetch_html(SOURCE_URL)
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Renderizando {SOURCE_URL} con navegador headless ...")
+    html = fetch_rendered_html(SOURCE_URL)
 
     groups = parse_groups(html)
     if len(groups) != 12:
         print(f"AVISO: se esperaban 12 grupos, se encontraron {len(groups)}.")
         print("El sitio puede haber cambiado de estructura. Revisa el scraper.")
+        # Guardamos el HTML renderizado para poder depurar si algo falla
+        with open("debug_rendered.html", "w", encoding="utf-8") as f:
+            f.write(html)
         if len(groups) == 0:
             sys.exit(1)
-
-    scorers = parse_scorers(html)
 
     payload = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "source": SOURCE_URL,
         "groups": groups,
     }
-    if scorers:
-        payload["scorers"] = scorers
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -136,3 +142,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
