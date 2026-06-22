@@ -1,0 +1,38 @@
+name: Actualizar datos del Mundial 2026
+
+on:
+  schedule:
+    # Se ejecuta cada 30 minutos. Ajusta el cron si quieres más o menos frecuencia.
+    # Sintaxis: minuto hora dia mes dia-semana (UTC)
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+    # Esto permite ejecutarlo manualmente desde la pestaña "Actions" en GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar scraper
+        run: python scraper.py
+
+      - name: Publicar cambios si hay datos nuevos
+        run: |
+          git config user.name "mundial-2026-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data.json
+          git diff --staged --quiet || git commit -m "Actualizar datos del Mundial 2026 [skip ci]"
+          git push
