@@ -3,30 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador Mundial 2026 (datos en vivo)</title>
+<title>Simulador Mundial 2026</title>
 <style>
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: #0b1220; color: #e8e8e8; margin: 0; padding: 16px;
+    background: #0b1220;
+    color: #e8e8e8;
+    margin: 0;
+    padding: 16px;
   }
   h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
   .sub { font-size: 13px; color: #9aa3b2; margin-bottom: 16px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tabs button {
+    flex: 1; min-width: 140px; padding: 10px; border-radius: 8px;
+    border: 1px solid #2a3344; background: #141b2b; color: #e8e8e8;
+    cursor: pointer; font-size: 13px;
+  }
+  .tabs button.active { background: #1d2a44; border-color: #3a5ba0; }
   .topbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .topbar button {
     padding: 8px 14px; border-radius: 8px; border: 1px solid #2a4a3a;
     background: #16261d; color: #8be0a8; cursor: pointer; font-size: 13px;
   }
+  .topbar button.secondary { border-color: #4a3a2a; background: #261d16; color: #e0b88b; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
   th { color: #9aa3b2; padding: 4px 2px; text-align: center; }
   th:first-child { text-align: left; }
   td { padding: 4px 2px; border-top: 1px solid #2a3344; text-align: center; }
   td:first-child { text-align: left; }
   tr.qualified { background: #102a1c; }
+  input[type=number] {
+    width: 32px; height: 24px; padding: 2px; font-size: 11px; text-align: center;
+    background: #0f1626; border: 1px solid #2a3344; color: #e8e8e8; border-radius: 4px;
+  }
   .group-block { margin-bottom: 20px; }
   .group-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .bracket-wrap { overflow-x: auto; padding: 4px 0 16px; }
+  .bracket-row { display: flex; align-items: center; gap: 10px; min-width: 1060px; }
+  .col { display: flex; flex-direction: column; justify-content: space-around; height: 600px; gap: 4px; }
+  .final-col { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 124px; }
+  .match {
+    border: 1px solid #2a3344; border-radius: 8px; background: #141b2b;
+    width: 124px; font-size: 10px; overflow: hidden;
+  }
+  .match .row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 6px; cursor: pointer;
+  }
+  .match .row.top { border-bottom: 1px solid #2a3344; }
+  .match .row.win { background: #163a26; font-weight: 600; }
+  .match .row span.name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .match .row span.edit { margin-left: 4px; flex-shrink: 0; color: #9aa3b2; }
+  .modal-overlay {
+    position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #141b2b; border: 1px solid #2a3344; border-radius: 10px;
+    padding: 20px; width: 90%; max-width: 520px;
+  }
+  .modal h2 { font-size: 16px; margin: 0 0 8px; }
+  .modal p { font-size: 12px; color: #9aa3b2; margin: 0 0 10px; }
+  .modal textarea {
+    width: 100%; height: 160px; background: #0f1626; color: #e8e8e8;
+    border: 1px solid #2a3344; border-radius: 6px; padding: 8px; font-size: 12px;
+    font-family: monospace;
+  }
+  .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+  .modal-actions button {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid #2a3344;
+    background: #1d2a44; color: #e8e8e8; cursor: pointer; font-size: 13px;
+  }
   .note { font-size: 11px; color: #6b7385; margin-top: 16px; line-height: 1.5; }
-  .error { background: #2a1616; border: 1px solid #5a2a2a; color: #f0b3b3; padding: 12px; border-radius: 8px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -36,39 +87,113 @@
 
 <div class="topbar">
   <button id="btnRefresh">⟳ Forzar actualización ahora</button>
+  <button id="btnUpdate" class="secondary">✎ Editar manualmente</button>
+  <button id="btnReset" class="secondary">Restablecer datos de fábrica</button>
+</div>
+
+<div class="tabs">
+  <button id="tabGroups" class="active">Grupos y tabla</button>
+  <button id="tabBracket">Cuadro eliminatorio</button>
+  <button id="tabStats">Estadísticas</button>
 </div>
 
 <div id="viewGroups"></div>
+<div id="viewBracket" style="display:none"></div>
+<div id="viewStats" style="display:none"></div>
 
 <div class="note">
-  Esta versión carga los datos automáticamente desde
+  Esta app carga los datos automáticamente desde
   <code id="dataUrlLabel">DATA_JSON_URL</code>,
-  un archivo que un bot en GitHub Actions actualiza solo cada 30 minutos.
-  No necesitas pegar nada manualmente: solo abre esta página y siempre verá
-  los datos más recientes que el bot haya publicado.
+  que un bot en GitHub Actions actualiza solo cada 30 minutos. Al abrir la
+  página siempre se descarga la versión más reciente. También puedes
+  editar cualquier marcador a mano (queda guardado en este navegador hasta
+  la próxima actualización del bot) o pegar un bloque JSON manual con
+  "Editar manualmente".
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>Actualizar datos</h2>
+    <p>Pega aquí el bloque de datos que te dé Claude con los resultados más recientes, y presiona "Aplicar". El formato es un objeto JSON con los 12 grupos.</p>
+    <textarea id="updateTextarea" placeholder='{"A": [["México",2,2,0,0,3,0], ...], "B": [...], ...}'></textarea>
+    <div class="modal-actions">
+      <button id="modalCancel">Cancelar</button>
+      <button id="modalApply">Aplicar</button>
+    </div>
+  </div>
 </div>
 
 <script>
-// ============================================================
-// CONFIGURA ESTA URL: debe apuntar al data.json de tu repositorio.
-// Ejemplo si tu usuario de GitHub es "tuusuario" y el repo se llama
-// "mundial-2026-bot":
-//
-//   https://raw.githubusercontent.com/tuusuario/mundial-2026-bot/main/data.json
-//
-// (raw.githubusercontent.com sirve el archivo tal cual, sin caché agresivo)
-// ============================================================
-const DATA_JSON_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/data.json";
+const DEFAULT_RAW = {
+  A: [["México",2,2,0,0,3,0],["Corea del Sur",2,1,0,1,2,2],["R. Checa",2,0,1,1,2,3],["Sudáfrica",2,0,1,1,1,3]],
+  B: [["Canadá",2,1,1,0,7,1],["Suiza",2,1,1,0,5,2],["Bosnia y Herz.",2,0,1,1,2,5],["Qatar",2,0,1,1,1,7]],
+  C: [["Brasil",2,1,1,0,4,1],["Marruecos",2,1,1,0,2,1],["Escocia",2,1,0,1,1,1],["Haití",2,0,0,2,0,4]],
+  D: [["Estados Unidos",2,2,0,0,6,1],["Australia",2,1,0,1,2,2],["Paraguay",2,1,0,1,2,4],["Türkiye",2,0,0,2,0,3]],
+  E: [["Alemania",2,2,0,0,9,2],["Costa de Marfil",2,1,0,1,2,2],["Ecuador",2,0,1,1,0,1],["Curazao",2,0,1,1,1,7]],
+  F: [["Países Bajos",2,1,1,0,7,3],["Japón",2,1,1,0,6,2],["Suecia",2,1,0,1,6,6],["Túnez",2,0,0,2,1,9]],
+  G: [["Egipto",2,1,1,0,4,2],["Irán",2,0,2,0,2,2],["Bélgica",2,0,2,0,1,1],["Nva. Zelanda",2,0,1,1,3,5]],
+  H: [["España",2,1,1,0,4,0],["Uruguay",2,0,2,0,3,3],["Cabo Verde",2,0,2,0,2,2],["Arabia Saudí",2,0,1,1,1,5]],
+  I: [["Noruega",1,1,0,0,4,1],["Francia",1,1,0,0,3,1],["Senegal",1,0,0,1,1,3],["Irak",1,0,0,1,1,4]],
+  J: [["Argentina",2,1,1,0,3,0],["Austria",2,1,1,0,3,1],["Jordania",1,0,0,1,1,3],["Argelia",1,0,0,1,0,3]],
+  K: [["Colombia",1,1,0,0,3,1],["R.D. Congo",1,0,1,0,1,1],["Portugal",1,0,1,0,1,1],["Uzbekistán",1,0,0,1,1,3]],
+  L: [["Inglaterra",1,1,0,0,4,2],["Ghana",1,1,0,0,1,0],["Panamá",1,0,0,1,0,1],["Croacia",1,0,0,1,2,4]]
+};
+const DEFAULT_TIMESTAMP = "22 de junio de 2026";
 
-document.getElementById('dataUrlLabel').textContent = DATA_JSON_URL;
+const DEFAULT_SCORERS = [
+  ["Jonathan David","Canadá",3],
+  ["Lionel Messi","Argentina",3],
+  ["Deniz Undav","Alemania",3],
+  ["Kylian Mbappé","Francia",2],
+  ["Harry Kane","Inglaterra",2],
+  ["Kai Havertz","Alemania",2],
+  ["Folarin Balogun","Estados Unidos",2],
+  ["Yasin Ayari","Suecia",2],
+  ["Elijah Just","Nueva Zelanda",2],
+  ["Johan Manzambi","Suiza",2],
+  ["Cyle Larin","Canadá",2],
+  ["Crysencio Summerville","Países Bajos",2],
+  ["Cody Gakpo","Países Bajos",2],
+  ["Brian Brobbey","Países Bajos",2],
+  ["Daichi Kamada","Japón",2],
+  ["Ayase Ueda","Japón",2],
+  ["Mikel Oyarzabal","España",2],
+  ["Matheus Cunha","Brasil",2],
+  ["Ismael Saibari","Marruecos",2],
+  ["Erling Haaland","Noruega",2]
+];
 
-function calcRow(t){
-  const pts = t.pg*3 + t.pe;
-  const dg = t.gf - t.gc;
-  return Object.assign({}, t, {pts, dg});
+const STORAGE_KEY_RAW = "mundial2026_raw";
+const STORAGE_KEY_TS = "mundial2026_ts";
+const STORAGE_KEY_R32MANUAL = "mundial2026_r32manual";
+const STORAGE_KEY_BRACKET = "mundial2026_bracket";
+const STORAGE_KEY_SCORERS = "mundial2026_scorers";
+
+function loadScorers(){
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_SCORERS);
+    return stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_SCORERS));
+  } catch(e){ return JSON.parse(JSON.stringify(DEFAULT_SCORERS)); }
 }
-function sortGroup(arr){
-  return arr.map(calcRow).sort((a,b)=> b.pts-a.pts || b.dg-a.dg || b.gf-a.gf);
+function saveScorers(s){
+  localStorage.setItem(STORAGE_KEY_SCORERS, JSON.stringify(s));
+}
+let SCORERS = loadScorers();
+
+function loadRaw(){
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_RAW);
+    return stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_RAW));
+  } catch(e){ return JSON.parse(JSON.stringify(DEFAULT_RAW)); }
+}
+function saveRaw(raw){
+  localStorage.setItem(STORAGE_KEY_RAW, JSON.stringify(raw));
+}
+function loadTimestamp(){
+  return localStorage.getItem(STORAGE_KEY_TS) || DEFAULT_TIMESTAMP;
+}
+function saveTimestamp(ts){
+  localStorage.setItem(STORAGE_KEY_TS, ts);
 }
 
 const FLAGS = {
@@ -92,50 +217,455 @@ function flagFor(name){
   if(!code) return '';
   return `<img src="https://flagcdn.com/h20/${code}.svg" width="20" height="14" alt="" style="vertical-align:middle;border-radius:2px;margin-right:5px;box-shadow:0 0 0 1px rgba(255,255,255,0.1)">`;
 }
+function withFlag(name){
+  const f = flagFor(name);
+  return f ? `${f}${name}` : name;
+}
 
-function renderGroups(groups){
+// ============================================================
+// URL del data.json publicado por el bot de GitHub Actions
+// ============================================================
+const DATA_JSON_URL = "https://raw.githubusercontent.com/jpcs041011/MUNDIAL-2026/main/data.json";
+
+let RAW = loadRaw();
+let data = {};
+function rebuildData(){
+  data = {};
+  Object.keys(RAW).forEach(g=>{
+    data[g] = RAW[g].map(r=>({name:r[0], pj:r[1], pg:r[2], pe:r[3], pp:r[4], gf:r[5], gc:r[6]}));
+  });
+}
+rebuildData();
+
+async function fetchLiveData(showAlerts){
+  const statusEl = document.getElementById('lastUpdated');
+  statusEl.textContent = "Buscando datos en vivo del bot...";
+  try {
+    const res = await fetch(DATA_JSON_URL + "?t=" + Date.now(), {cache: "no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const payload = await res.json();
+    if(!payload.groups || Object.keys(payload.groups).length === 0){
+      throw new Error("data.json no trae grupos todavía");
+    }
+    RAW = payload.groups;
+    saveRaw(RAW);
+    const updated = new Date(payload.updated_at);
+    const tsLabel = "Última actualización del bot: " + updated.toLocaleString('es-MX');
+    saveTimestamp(tsLabel);
+    rebuildData();
+    buildR32();
+    saveBracketState();
+    statusEl.textContent = tsLabel;
+    renderGroups();
+    renderBracket();
+    renderStats();
+    return true;
+  } catch(e){
+    statusEl.textContent = "No se pudo conectar al bot (" + e.message + "). Mostrando últimos datos guardados: " + loadTimestamp();
+    if(showAlerts){
+      alert('No se pudo cargar data.json. Revisa que el repositorio sea público y que el bot ya haya corrido al menos una vez.\n\nDetalle: ' + e.message);
+    }
+    renderGroups();
+    renderBracket();
+    renderStats();
+    return false;
+  }
+}
+
+function calcRow(t){
+  const pts = t.pg*3 + t.pe;
+  const dg = t.gf - t.gc;
+  return Object.assign({}, t, {pts, dg});
+}
+function sortGroup(arr){
+  return arr.map(calcRow).sort((a,b)=> b.pts-a.pts || b.dg-a.dg || b.gf-a.gf);
+}
+
+function renderGroups(){
   const el = document.getElementById('viewGroups');
   let html = '';
-  Object.keys(groups).sort().forEach(g=>{
-    const teams = groups[g].map(r=>({name:r[0], pj:r[1], pg:r[2], pe:r[3], pp:r[4], gf:r[5], gc:r[6]}));
-    const sorted = sortGroup(teams);
+  Object.keys(RAW).forEach(g=>{
+    const sorted = sortGroup(data[g]);
     html += `<div class="group-block">
       <div class="group-title">Grupo ${g}</div>
       <table>
+      <colgroup><col style="width:32%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"></colgroup>
       <tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>Pts</th><th>DG</th></tr>`;
     sorted.forEach((t,idx)=>{
+      const orig = data[g].find(x=>x.name===t.name);
       html += `<tr class="${idx<2?'qualified':''}">
-        <td>${flagFor(t.name)}${t.name}</td><td>${t.pj}</td><td>${t.pg}</td><td>${t.pe}</td><td>${t.pp}</td>
-        <td>${t.gf}</td><td>${t.gc}</td><td>${t.pts}</td><td>${t.dg>0?'+':''}${t.dg}</td>
+        <td>${flagFor(t.name)} ${t.name}</td>
+        <td><input type="number" min="0" max="3" value="${orig.pj}" data-g="${g}" data-n="${t.name}" data-f="pj"></td>
+        <td><input type="number" min="0" max="3" value="${orig.pg}" data-g="${g}" data-n="${t.name}" data-f="pg"></td>
+        <td><input type="number" min="0" max="3" value="${orig.pe}" data-g="${g}" data-n="${t.name}" data-f="pe"></td>
+        <td><input type="number" min="0" max="3" value="${orig.pp}" data-g="${g}" data-n="${t.name}" data-f="pp"></td>
+        <td><input type="number" min="0" value="${orig.gf}" data-g="${g}" data-n="${t.name}" data-f="gf"></td>
+        <td><input type="number" min="0" value="${orig.gc}" data-g="${g}" data-n="${t.name}" data-f="gc"></td>
+        <td>${t.pts}</td>
+        <td>${t.dg>0?'+':''}${t.dg}</td>
       </tr>`;
     });
     html += `</table></div>`;
   });
   el.innerHTML = html;
+  el.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const {g,n,f} = e.target.dataset;
+      const rowObj = data[g].find(x=>x.name===n);
+      rowObj[f] = parseInt(e.target.value)||0;
+      const idx = data[g].findIndex(x=>x.name===n);
+      const fIdx = {name:0,pj:1,pg:2,pe:3,pp:4,gf:5,gc:6}[f];
+      RAW[g][idx][fIdx] = rowObj[f];
+      saveRaw(RAW);
+      renderGroups();
+      buildR32();
+      saveBracketState();
+      renderBracket();
+    });
+  });
 }
 
-async function loadData(){
-  document.getElementById('lastUpdated').textContent = "Cargando datos en vivo...";
+function getQualified(){
+  const winners=[], runners=[], thirds=[];
+  Object.keys(RAW).forEach(g=>{
+    const sorted = sortGroup(data[g]);
+    winners.push(Object.assign({}, sorted[0], {group:g}));
+    runners.push(Object.assign({}, sorted[1], {group:g}));
+    thirds.push(Object.assign({}, sorted[2], {group:g}));
+  });
+  const bestThirds = thirds.slice().sort((a,b)=> b.pts-a.pts || b.dg-a.dg || b.gf-a.gf).slice(0,8);
+  return {winners, runners, thirds, bestThirds};
+}
+
+const THIRD_SLOTS = [
+  {host:'1E', cands:['A','B','C','D','F']},
+  {host:'1I', cands:['C','D','F','G','H']},
+  {host:'1D', cands:['B','E','F','I','J']},
+  {host:'1G', cands:['A','E','H','I','J']},
+  {host:'1A', cands:['C','E','F','H','I']},
+  {host:'1L', cands:['E','H','I','J','K']},
+  {host:'1B', cands:['E','F','G','I','J']},
+  {host:'1K', cands:['D','E','I','J','L']}
+];
+
+function assignThirds(bestThirds){
+  const slots = THIRD_SLOTS.map(s=>Object.assign({}, s, {team:null}));
+  bestThirds.forEach(team=>{
+    const eligible = slots.filter(s=>!s.team && s.cands.indexOf(team.group)>=0);
+    if(eligible.length===0) return;
+    eligible.sort((a,b)=> a.cands.length - b.cands.length);
+    eligible[0].team = team;
+  });
+  return slots;
+}
+
+function refLabel(ref, winners, runners){
+  const type = ref[0], g = ref[1];
+  const list = type==='1' ? winners : runners;
+  const t = list.find(x=>x.group===g);
+  return t ? t.name : ref;
+}
+
+let r32 = [];
+function buildR32(){
+  const {winners, runners, bestThirds} = getQualified();
+  const thirdSlots = assignThirds(bestThirds);
+  const tLabel = host => {
+    const s = thirdSlots.find(x=>x.host===host);
+    return s && s.team ? s.team.name : `3ros ${THIRD_SLOTS.find(x=>x.host===host).cands.join('')}`;
+  };
+  const L = ref => refLabel(ref, winners, runners);
+  const fresh = [
+    {a:L('1E'), b:tLabel('1E')}, {a:L('1I'), b:tLabel('1I')},
+    {a:L('2A'), b:L('2B')}, {a:L('1F'), b:L('2C')},
+    {a:L('2K'), b:L('2L')}, {a:L('1H'), b:L('2J')},
+    {a:L('1D'), b:tLabel('1D')}, {a:L('1G'), b:tLabel('1G')},
+    {a:L('1C'), b:L('2F')}, {a:L('2E'), b:L('2I')},
+    {a:L('1A'), b:tLabel('1A')}, {a:L('1L'), b:tLabel('1L')},
+    {a:L('1J'), b:L('2H')}, {a:L('2D'), b:L('2G')},
+    {a:L('1B'), b:tLabel('1B')}, {a:L('1K'), b:tLabel('1K')}
+  ];
+  fresh.forEach((m,i)=>{
+    if(r32[i] && (r32[i].a_manual || r32[i].b_manual)){
+      m.a_manual = r32[i].a_manual; m.b_manual = r32[i].b_manual;
+      if(m.a_manual) m.a = m.a_manual;
+      if(m.b_manual) m.b = m.b_manual;
+      m.winner = r32[i].winner;
+    } else {
+      m.winner = null;
+    }
+  });
+  r32 = fresh;
+}
+buildR32();
+
+function freshMatch(){ return {a:'', b:'', winner:null}; }
+let r16=[], qf=[], sf=[], fin=[];
+
+function loadBracketState(){
   try {
-    const res = await fetch(DATA_JSON_URL + "?t=" + Date.now(), {cache: "no-store"});
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    const payload = await res.json();
-    renderGroups(payload.groups);
-    const updated = new Date(payload.updated_at);
-    document.getElementById('lastUpdated').textContent =
-      "Última actualización del bot: " + updated.toLocaleString('es-MX');
-  } catch(e){
-    document.getElementById('viewGroups').innerHTML =
-      `<div class="error">No se pudo cargar data.json (${e.message}).
-       Revisa que DATA_JSON_URL esté bien configurada y que el repositorio
-       sea público.</div>`;
-    document.getElementById('lastUpdated').textContent = "Error al cargar datos.";
-  }
+    const stored = localStorage.getItem(STORAGE_KEY_BRACKET);
+    if(!stored) return false;
+    const parsed = JSON.parse(stored);
+    r32 = parsed.r32 || r32;
+    r16 = parsed.r16 || [];
+    qf = parsed.qf || [];
+    sf = parsed.sf || [];
+    fin = parsed.fin || [];
+    return true;
+  } catch(e){ return false; }
+}
+function saveBracketState(){
+  localStorage.setItem(STORAGE_KEY_BRACKET, JSON.stringify({r32, r16, qf, sf, fin}));
 }
 
-document.getElementById('btnRefresh').onclick = loadData;
-loadData();
-setInterval(loadData, 5 * 60 * 1000); // refresca solo cada 5 minutos mientras esté abierta
+function ensureRest(){
+  if(r16.length!==8){ r16=[]; for(let i=0;i<8;i++) r16.push(freshMatch()); }
+  if(qf.length!==4){ qf=[]; for(let i=0;i<4;i++) qf.push(freshMatch()); }
+  if(sf.length!==2){ sf=[]; for(let i=0;i<2;i++) sf.push(freshMatch()); }
+  if(fin.length!==1){ fin=[freshMatch()]; }
+}
+
+if(!loadBracketState()){
+  ensureRest();
+} else {
+  ensureRest();
+}
+
+function winnerOf(m){ return m.winner!==null ? (m.winner===0?m.a:m.b) : ''; }
+
+function propagateAll(){
+  for(let i=0;i<16;i+=2){
+    const ni=i/2, w1=winnerOf(r32[i]), w2=winnerOf(r32[i+1]);
+    if(!r16[ni].a_manual) r16[ni].a = w1;
+    if(!r16[ni].b_manual) r16[ni].b = w2;
+  }
+  for(let i=0;i<8;i+=2){
+    const ni=i/2, w1=winnerOf(r16[i]), w2=winnerOf(r16[i+1]);
+    if(!qf[ni].a_manual) qf[ni].a = w1;
+    if(!qf[ni].b_manual) qf[ni].b = w2;
+  }
+  for(let i=0;i<4;i+=2){
+    const ni=i/2, w1=winnerOf(qf[i]), w2=winnerOf(qf[i+1]);
+    if(!sf[ni].a_manual) sf[ni].a = w1;
+    if(!sf[ni].b_manual) sf[ni].b = w2;
+  }
+  if(!fin[0].a_manual) fin[0].a = winnerOf(sf[0]);
+  if(!fin[0].b_manual) fin[0].b = winnerOf(sf[1]);
+}
+
+function matchBoxHtml(m, idAttr){
+  const labelA = m.a ? withFlag(m.a) : 'Por definir';
+  const labelB = m.b ? withFlag(m.b) : 'Por definir';
+  return `<div class="match" data-match="${idAttr}">
+    <div class="row top ${m.winner===0?'win':''}" data-pick="0">
+      <span class="name">${labelA}</span>
+      <span class="edit" data-edit="0">✎</span>
+    </div>
+    <div class="row ${m.winner===1?'win':''}" data-pick="1">
+      <span class="name">${labelB}</span>
+      <span class="edit" data-edit="1">✎</span>
+    </div>
+  </div>`;
+}
+
+function renderBracket(){
+  ensureRest();
+  propagateAll();
+  const el = document.getElementById('viewBracket');
+
+  const colDef = [
+    {key:'r32L', matches:r32.slice(0,8)},
+    {key:'r16L', matches:r16.slice(0,4)},
+    {key:'qfL', matches:qf.slice(0,2)},
+    {key:'sfL', matches:[sf[0]]},
+    {key:'FINAL', matches:[fin[0]]},
+    {key:'sfR', matches:[sf[1]]},
+    {key:'qfR', matches:qf.slice(2,4)},
+    {key:'r16R', matches:r16.slice(4,8)},
+    {key:'r32R', matches:r32.slice(8,16)}
+  ];
+
+  let html = `<div class="bracket-wrap"><div class="bracket-row">`;
+  colDef.forEach(col=>{
+    if(col.key==='FINAL'){
+      html += `<div class="final-col">
+        <div style="font-size:22px">🏆</div>
+        <div style="font-size:10px;color:#9aa3b2">Final</div>
+        ${matchBoxHtml(col.matches[0], 'FINAL-0')}
+      </div>`;
+    } else {
+      html += `<div class="col">${col.matches.map((m,i)=>matchBoxHtml(m, col.key+'-'+i)).join('')}</div>`;
+    }
+  });
+  html += `</div></div>`;
+  el.innerHTML = html;
+
+  const allMatches = {};
+  colDef.forEach(col=> col.matches.forEach((m,i)=> allMatches[col.key+'-'+i] = m));
+
+  el.querySelectorAll('[data-match]').forEach(box=>{
+    const id = box.dataset.match;
+    const m = allMatches[id];
+    box.querySelectorAll('[data-pick]').forEach(row=>{
+      row.addEventListener('click', e=>{
+        if(e.target.closest('[data-edit]')) return;
+        const pick = +row.dataset.pick;
+        if((pick===0 && !m.a) || (pick===1 && !m.b)) return;
+        m.winner = pick;
+        saveBracketState();
+        renderBracket();
+      });
+    });
+    box.querySelectorAll('[data-edit]').forEach(icon=>{
+      icon.addEventListener('click', e=>{
+        e.stopPropagation();
+        const which = icon.dataset.edit;
+        const cur = which==='0' ? m.a : m.b;
+        const val = prompt('Nombre del equipo:', cur||'');
+        if(val===null) return;
+        if(which==='0'){ m.a = val; m.a_manual = val; }
+        else { m.b = val; m.b_manual = val; }
+        saveBracketState();
+        renderBracket();
+      });
+    });
+  });
+}
+
+function renderStats(){
+  const el = document.getElementById('viewStats');
+
+  const allTeams = [];
+  Object.keys(RAW).forEach(g=>{
+    RAW[g].forEach(r=>{
+      allTeams.push({name:r[0], group:g, pj:r[1], pg:r[2], pe:r[3], pp:r[4], gf:r[5], gc:r[6], dg:r[5]-r[6]});
+    });
+  });
+  const topGF = allTeams.slice().sort((a,b)=> b.gf-a.gf).slice(0,5);
+  const topDG = allTeams.slice().sort((a,b)=> b.dg-a.dg).slice(0,5);
+  const bestDef = allTeams.slice().sort((a,b)=> a.gc-b.gc || b.pj-a.pj).slice(0,5);
+  const totalGoals = allTeams.reduce((s,t)=>s+t.gf,0)/2;
+  const totalMatches = allTeams.reduce((s,t)=>s+t.pj,0)/2;
+  const avgGoals = totalMatches>0 ? (totalGoals/totalMatches).toFixed(2) : '0';
+
+  let html = `<div class="group-block">
+    <div class="group-title">Tabla de goleadores (Bota de Oro) — provisional</div>
+    <table>
+      <tr><th style="text-align:left">Jugador</th><th style="text-align:left">Selección</th><th>Goles</th></tr>
+      ${SCORERS.map((s,i)=>`<tr><td style="text-align:left">${s[0]}</td><td style="text-align:left">${flagFor(s[1])} ${s[1]}</td><td>${s[2]}</td></tr>`).join('')}
+    </table>
+  </div>
+
+  <div class="group-block">
+    <div class="group-title">Resumen del torneo</div>
+    <table>
+      <tr><td style="text-align:left">Partidos jugados (todos los grupos)</td><td>${totalMatches}</td></tr>
+      <tr><td style="text-align:left">Goles totales anotados</td><td>${totalGoals}</td></tr>
+      <tr><td style="text-align:left">Promedio de goles por partido</td><td>${avgGoals}</td></tr>
+    </table>
+  </div>
+
+  <div class="group-block">
+    <div class="group-title">Ataques más prolíficos</div>
+    <table>
+      <tr><th style="text-align:left">Selección</th><th>Grupo</th><th>GF</th></tr>
+      ${topGF.map(t=>`<tr><td style="text-align:left">${flagFor(t.name)} ${t.name}</td><td>${t.group}</td><td>${t.gf}</td></tr>`).join('')}
+    </table>
+  </div>
+
+  <div class="group-block">
+    <div class="group-title">Mejor diferencia de gol</div>
+    <table>
+      <tr><th style="text-align:left">Selección</th><th>Grupo</th><th>DG</th></tr>
+      ${topDG.map(t=>`<tr><td style="text-align:left">${flagFor(t.name)} ${t.name}</td><td>${t.group}</td><td>${t.dg>0?'+':''}${t.dg}</td></tr>`).join('')}
+    </table>
+  </div>
+
+  <div class="group-block">
+    <div class="group-title">Defensas más sólidas (menos goles recibidos)</div>
+    <table>
+      <tr><th style="text-align:left">Selección</th><th>Grupo</th><th>GC</th><th>PJ</th></tr>
+      ${bestDef.map(t=>`<tr><td style="text-align:left">${flagFor(t.name)} ${t.name}</td><td>${t.group}</td><td>${t.gc}</td><td>${t.pj}</td></tr>`).join('')}
+    </table>
+  </div>
+
+  <div class="note">La tabla de goleadores no se calcula automáticamente desde los marcadores de grupos (esos solo guardan el resultado final, no quién anotó). Pídele a Claude la tabla de goleadores actualizada y pégala con el botón "Actualizar datos" incluyendo la clave "SCORERS" en el bloque JSON.</div>`;
+
+  el.innerHTML = html;
+}
+
+function setActiveTab(tab){
+  document.getElementById('viewGroups').style.display = tab==='groups' ? 'block':'none';
+  document.getElementById('viewBracket').style.display = tab==='bracket' ? 'block':'none';
+  document.getElementById('viewStats').style.display = tab==='stats' ? 'block':'none';
+  document.getElementById('tabGroups').classList.toggle('active', tab==='groups');
+  document.getElementById('tabBracket').classList.toggle('active', tab==='bracket');
+  document.getElementById('tabStats').classList.toggle('active', tab==='stats');
+}
+document.getElementById('tabGroups').onclick = ()=>{ setActiveTab('groups'); };
+document.getElementById('tabBracket').onclick = ()=>{ setActiveTab('bracket'); renderBracket(); };
+document.getElementById('tabStats').onclick = ()=>{ setActiveTab('stats'); renderStats(); };
+
+document.getElementById('btnUpdate').onclick = ()=>{
+  document.getElementById('modalOverlay').classList.add('open');
+};
+document.getElementById('modalCancel').onclick = ()=>{
+  document.getElementById('modalOverlay').classList.remove('open');
+};
+document.getElementById('modalApply').onclick = ()=>{
+  const text = document.getElementById('updateTextarea').value.trim();
+  if(!text){ document.getElementById('modalOverlay').classList.remove('open'); return; }
+  try {
+    const parsed = JSON.parse(text);
+    Object.keys(parsed).forEach(g=>{
+      if(g==='SCORERS'){
+        SCORERS = parsed.SCORERS;
+        saveScorers(SCORERS);
+      } else if(RAW[g]){
+        RAW[g] = parsed[g];
+      }
+    });
+    saveRaw(RAW);
+    const now = new Date().toLocaleDateString('es-MX', {day:'numeric', month:'long', year:'numeric'});
+    saveTimestamp(now);
+    rebuildData();
+    document.getElementById('lastUpdated').textContent = "Datos cargados: " + now + " · edita los marcadores cuando quieras";
+    buildR32();
+    saveBracketState();
+    renderGroups();
+    renderBracket();
+    renderStats();
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('updateTextarea').value = '';
+  } catch(e){
+    alert('El texto pegado no es un JSON válido. Pídele a Claude el bloque de datos actualizado y pégalo tal cual.');
+  }
+};
+
+document.getElementById('btnReset').onclick = ()=>{
+  if(!confirm('Esto borrará tus ediciones, goleadores y cuadro eliminatorio, volviendo a los datos de fábrica (22 de junio de 2026). ¿Continuar?')) return;
+  localStorage.removeItem(STORAGE_KEY_RAW);
+  localStorage.removeItem(STORAGE_KEY_TS);
+  localStorage.removeItem(STORAGE_KEY_BRACKET);
+  localStorage.removeItem(STORAGE_KEY_SCORERS);
+  RAW = JSON.parse(JSON.stringify(DEFAULT_RAW));
+  SCORERS = JSON.parse(JSON.stringify(DEFAULT_SCORERS));
+  rebuildData();
+  document.getElementById('lastUpdated').textContent = "Datos cargados: " + DEFAULT_TIMESTAMP + " · edita los marcadores cuando quieras";
+  buildR32();
+  r16=[]; qf=[]; sf=[]; fin=[];
+  ensureRest();
+  saveBracketState();
+  renderGroups();
+  renderBracket();
+  renderStats();
+};
+
+document.getElementById('btnRefresh').onclick = ()=> fetchLiveData(true);
+
+fetchLiveData(false);
+setInterval(()=> fetchLiveData(false), 5 * 60 * 1000);
 </script>
 </body>
 </html>
