@@ -2,9 +2,10 @@ name: Actualizar datos del Mundial 2026
 
 on:
   schedule:
-    # Se ejecuta cada 30 minutos. Ajusta el cron si quieres más o menos frecuencia.
-    # Sintaxis: minuto hora dia mes dia-semana (UTC)
-    - cron: "*/30 * * * *"
+    # Se ejecuta cada 30 minutos, en los minutos :07 y :37 (no en :00/:30)
+    # para evitar la hora de mayor saturación de GitHub Actions, cuando
+    # millones de repos programan sus tareas justo en los minutos redondos.
+    - cron: "7,37 * * * *"
   workflow_dispatch: {}
     # Esto permite ejecutarlo manualmente desde la pestaña "Actions" en GitHub
 
