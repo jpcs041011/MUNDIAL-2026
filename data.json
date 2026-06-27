@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-06-26T17:23:33.508322+00:00",
+  "updated_at": "2026-06-27T08:12:25.429675+00:00",
   "source": "https://bracketmundial2026.com/posiciones",
   "groups": {
     "A": [
       [
-        "México",
+        "MéxicoClasificado",
         3,
         3,
         0,
@@ -13,7 +13,7 @@
         0
       ],
       [
-        "Sudáfrica",
+        "SudáfricaClasificado",
         3,
         1,
         1,
@@ -22,7 +22,7 @@
         3
       ],
       [
-        "Corea del Sur",
+        "Corea del Sur3º · va entrando",
         3,
         1,
         0,
@@ -31,7 +31,7 @@
         3
       ],
       [
-        "R. Checa",
+        "ChequiaEliminado",
         3,
         0,
         1,
@@ -42,7 +42,7 @@
     ],
     "B": [
       [
-        "Suiza",
+        "SuizaClasificado",
         3,
         2,
         1,
@@ -51,7 +51,7 @@
         3
       ],
       [
-        "Canadá",
+        "CanadáClasificado",
         3,
         1,
         1,
@@ -60,7 +60,7 @@
         3
       ],
       [
-        "Bosnia y Herz.",
+        "Bosnia y Herzegovina3º · va entrando",
         3,
         1,
         1,
@@ -69,7 +69,7 @@
         6
       ],
       [
-        "Qatar",
+        "QatarEliminado",
         3,
         0,
         1,
@@ -80,7 +80,7 @@
     ],
     "C": [
       [
-        "Brasil",
+        "BrasilClasificado",
         3,
         2,
         1,
@@ -89,7 +89,7 @@
         1
       ],
       [
-        "Marruecos",
+        "MarruecosClasificado",
         3,
         2,
         1,
@@ -98,7 +98,7 @@
         3
       ],
       [
-        "Escocia",
+        "Escocia3º · fuera por ahora",
         3,
         1,
         0,
@@ -107,7 +107,7 @@
         4
       ],
       [
-        "Haití",
+        "HaitíEliminado",
         3,
         0,
         0,
@@ -118,7 +118,7 @@
     ],
     "D": [
       [
-        "Estados Unidos",
+        "Estados UnidosClasificado",
         3,
         2,
         0,
@@ -127,7 +127,7 @@
         4
       ],
       [
-        "Australia",
+        "AustraliaClasificado",
         3,
         1,
         1,
@@ -136,7 +136,7 @@
         2
       ],
       [
-        "Paraguay",
+        "Paraguay3º · va entrando",
         3,
         1,
         1,
@@ -145,7 +145,7 @@
         4
       ],
       [
-        "Türkiye",
+        "TurquíaEliminado",
         3,
         1,
         0,
@@ -156,7 +156,7 @@
     ],
     "E": [
       [
-        "Alemania",
+        "AlemaniaClasificado",
         3,
         2,
         0,
@@ -165,7 +165,7 @@
         4
       ],
       [
-        "Costa de Marfil",
+        "Costa de MarfilClasificado",
         3,
         2,
         0,
@@ -174,7 +174,7 @@
         2
       ],
       [
-        "Ecuador",
+        "Ecuador3º · va entrando",
         3,
         1,
         1,
@@ -183,7 +183,7 @@
         2
       ],
       [
-        "Curazao",
+        "CurazaoEliminado",
         3,
         0,
         1,
@@ -194,7 +194,7 @@
     ],
     "F": [
       [
-        "Países Bajos",
+        "Países BajosClasificado",
         3,
         2,
         1,
@@ -203,7 +203,7 @@
         4
       ],
       [
-        "Japón",
+        "JapónClasificado",
         3,
         1,
         2,
@@ -212,7 +212,7 @@
         3
       ],
       [
-        "Suecia",
+        "Suecia3º · va entrando",
         3,
         1,
         1,
@@ -221,7 +221,7 @@
         7
       ],
       [
-        "Túnez",
+        "TúnezEliminado",
         3,
         0,
         0,
@@ -232,75 +232,75 @@
     ],
     "G": [
       [
-        "Egipto",
-        2,
-        1,
-        1,
-        0,
-        4,
-        2
-      ],
-      [
-        "Irán",
-        2,
-        0,
-        2,
-        0,
-        2,
-        2
-      ],
-      [
-        "Bélgica",
-        2,
-        0,
-        2,
-        0,
-        1,
-        1
-      ],
-      [
-        "Nva. Zelanda",
-        2,
-        0,
-        1,
-        1,
+        "BélgicaClasificado",
         3,
-        5
-      ]
-    ],
-    "H": [
-      [
-        "España",
+        1,
         2,
-        1,
-        1,
         0,
-        4,
-        0
+        6,
+        2
       ],
       [
-        "Uruguay",
+        "EgiptoClasificado",
+        3,
+        1,
         2,
         0,
-        2,
+        5,
+        3
+      ],
+      [
+        "Irán3º · va entrando",
+        3,
+        0,
+        3,
         0,
         3,
         3
       ],
       [
-        "Cabo Verde",
-        2,
+        "Nueva ZelandaEliminado",
+        3,
         0,
+        1,
         2,
+        4,
+        10
+      ]
+    ],
+    "H": [
+      [
+        "EspañaClasificado",
+        3,
+        2,
+        1,
+        0,
+        5,
+        0
+      ],
+      [
+        "Cabo VerdeClasificado",
+        3,
+        0,
+        3,
         0,
         2,
         2
       ],
       [
-        "Arabia Saudí",
-        2,
+        "Uruguay3º · fuera por ahora",
+        3,
         0,
+        2,
         1,
+        3,
+        4
+      ],
+      [
+        "Arabia SauditaEliminado",
+        3,
+        0,
+        2,
         1,
         1,
         5
@@ -308,40 +308,40 @@
     ],
     "I": [
       [
-        "Francia",
-        2,
-        2,
-        0,
-        0,
-        6,
-        1
-      ],
-      [
-        "Noruega",
-        2,
-        2,
-        0,
-        0,
-        7,
-        3
-      ],
-      [
-        "Senegal",
-        2,
-        0,
-        0,
-        2,
+        "FranciaClasificado",
         3,
+        3,
+        0,
+        0,
+        10,
+        2
+      ],
+      [
+        "NoruegaClasificado",
+        3,
+        2,
+        0,
+        1,
+        8,
+        7
+      ],
+      [
+        "Senegal3º · va entrando",
+        3,
+        1,
+        0,
+        2,
+        8,
         6
       ],
       [
-        "Irak",
-        2,
+        "IraqEliminado",
+        3,
         0,
         0,
-        2,
+        3,
         1,
-        7
+        12
       ]
     ],
     "J": [
@@ -384,7 +384,7 @@
     ],
     "K": [
       [
-        "Colombia",
+        "ColombiaClasificado",
         2,
         2,
         0,
