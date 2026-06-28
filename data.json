@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-27T20:42:40.327094+00:00",
+  "updated_at": "2026-06-28T08:34:58.260866+00:00",
   "source": "https://bracketmundial2026.com/posiciones",
   "groups": {
     "A": [
@@ -22,7 +22,7 @@
         3
       ],
       [
-        "Corea del Sur3º · va entrando",
+        "Corea del Sur3º · fuera por ahora",
         3,
         1,
         0,
@@ -250,7 +250,7 @@
         3
       ],
       [
-        "Irán3º · va entrando",
+        "Irán3º · fuera por ahora",
         3,
         0,
         3,
@@ -346,116 +346,116 @@
     ],
     "J": [
       [
-        "Argentina",
-        2,
-        2,
-        0,
-        0,
-        5,
-        0
-      ],
-      [
-        "Austria",
-        2,
-        1,
-        0,
-        1,
+        "ArgentinaClasificado",
         3,
-        3
+        3,
+        0,
+        0,
+        8,
+        1
       ],
       [
-        "Argelia",
-        2,
+        "AustriaClasificado",
+        3,
         1,
-        0,
         1,
-        2,
-        4
+        1,
+        6,
+        6
       ],
       [
-        "Jordania",
-        2,
+        "Argelia3º · va entrando",
+        3,
+        1,
+        1,
+        1,
+        5,
+        7
+      ],
+      [
+        "JordaniaEliminado",
+        3,
         0,
         0,
-        2,
-        2,
-        5
+        3,
+        3,
+        8
       ]
     ],
     "K": [
       [
         "ColombiaClasificado",
+        3,
         2,
-        2,
-        0,
+        1,
         0,
         4,
         1
       ],
       [
-        "Portugal",
+        "PortugalClasificado",
+        3,
+        1,
         2,
-        1,
-        1,
         0,
         6,
         1
       ],
       [
-        "R.D. Congo",
-        2,
-        0,
+        "DR Congo3º · va entrando",
+        3,
         1,
         1,
         1,
-        2
+        4,
+        3
       ],
       [
-        "Uzbekistán",
-        2,
+        "UzbekistánEliminado",
+        3,
         0,
         0,
+        3,
         2,
-        1,
-        8
+        11
       ]
     ],
     "L": [
       [
-        "Inglaterra",
-        2,
-        1,
-        1,
-        0,
-        4,
-        2
-      ],
-      [
-        "Ghana",
-        2,
-        1,
-        1,
-        0,
-        1,
-        0
-      ],
-      [
-        "Croacia",
-        2,
-        1,
-        0,
-        1,
+        "InglaterraClasificado",
         3,
-        4
+        2,
+        1,
+        0,
+        6,
+        2
       ],
       [
-        "Panamá",
+        "CroaciaClasificado",
+        3,
         2,
         0,
-        0,
+        1,
+        5,
+        5
+      ],
+      [
+        "Ghana3º · va entrando",
+        3,
+        1,
+        1,
+        1,
         2,
-        0,
         2
+      ],
+      [
+        "PanamáEliminado",
+        3,
+        0,
+        0,
+        3,
+        0,
+        4
       ]
     ]
   }
